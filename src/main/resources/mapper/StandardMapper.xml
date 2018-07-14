@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.chengyu.demo.dao.StandardMapper">
+
+    <!--(依据下面的select中更名的字段id别名se_id，在此将相同的字段名改为别名)-->
+    <resultMap type="Standard" id="standardList">
+        <id column="id" property="id"/>
+        <result column="std_num" property="stdNum"/>
+        <result column="release_date" property="releaseDate"/>
+        <result column="impl_date" property="implDate"/>
+        <result column="package_path" property="packagePath"/>
+    </resultMap>
+
+
+    <select id="getByCondition" resultMap="standardList">
+        select * from standard
+        <where>
+            <if test="condition != null and condition !='' ">
+                std_num LIKE CONCAT('%',#{condition},'%') or zhname LIKE CONCAT('%',#{condition},'%')
+            </if>
+        </where>
+        <!-- order by SUBSTRING(std_num,4,6) ASC -->
+        order by CONVERT((SUBSTRING_INDEX(SUBSTRING_INDEX(std_num, '.', -1),'-',1)),SIGNED) ASC
+        limit #{pageNo},#{pageSize}
+    </select>
+
+
+    <select id="getCountByCondition" resultType="java.lang.Integer">
+        select count(1) from standard
+        <where>
+            <if test="condition != null and condition !='' ">
+                std_num LIKE CONCAT('%',#{condition},'%') or zhname LIKE CONCAT('%',#{condition},'%')
+            </if>
+        </where>
+    </select>
+
+    <insert id="addStandard">
+        insert into
+        standard(std_num,zhname,version,`keys`,release_date,impl_date,package_path)
+        values(#{stdNum},#{zhname},#{version},#{keys},#{releaseDate},#{implDate},#{packagePath})
+    </insert>
+
+    <select id="stdNumExists" resultType="java.lang.Integer">
+        select count(1) from standard where std_num like CONCAT('%',#{stdNum},'%')
+    </select>
+
+    <select id="queryById" resultMap="standardList">
+        select * from standard where id=#{id}
+    </select>
+    <select id="getAll" resultType="com.chengyu.demo.entity.Standard"></select>
+    <select id="getCount" resultType="java.lang.Integer"></select>
+
+    <update id="modifyStandard">
+        update standard
+        <trim prefix="set" suffixOverrides="," suffix="where id = #{id}">
+            <if test="zhname != null">zhname=#{zhname},</if>
+            <if test="version != null">version=#{version},</if>
+            <if test="keys != null">`keys`=#{keys},</if>
+            <if test="releaseDate != null">release_date=#{releaseDate},</if>
+            <if test="implDate != null">impl_date=#{implDate},</if>
+            <if test="packagePath != null">package_path=#{packagePath},</if>
+        </trim>
+    </update>
+
+    <delete id="delStandard">
+        delete from standard where id in
+        <foreach collection="array" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+    </delete>
+</mapper>
